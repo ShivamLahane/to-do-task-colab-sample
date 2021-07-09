@@ -1,8 +1,27 @@
-function TaskElement(id, taskText, show)
+function TaskElement(id, taskText, show, striked)
 {
     this.id =  id;
     this.taskText = taskText;
     this.show = show;
+    this.strike = striked;
+
+}
+
+function printLastUpdate()
+{
+    document.getElementById("last-update-time").innerHTML = (new Date()).now();
+}
+
+function updateCount()
+{
+    let countLabel = document.getElementById("count");
+    let count = getCount();
+    if (count)
+    {
+        countLabel.innerHTML = "Count : " + count;
+        return;
+    }
+    countLabel.innerHTML = 0;
 }
 
 function printUlElements()
@@ -53,6 +72,11 @@ function deleteTask(e)
     parent.style.display = "none";
 }
 
+function getCount()
+{
+    return localStorage.getItem("counter");
+}
+
 function createId()
 {
     if (localStorage.getItem("counter"))
@@ -78,7 +102,7 @@ function addValueToListOnEnter(e)
         var array = getTasks();
 
         // create new task element
-        var task = new TaskElement(createId(), trimmedString, true);
+        var task = new TaskElement(createId(), trimmedString, true, false);
 
         if (array.length > 0)
         {
@@ -111,8 +135,13 @@ function addValueToListOnEnter(e)
 
         // making text area value null again
         textArea.value = null;
+        updateCount();
     }
 }
+
+function addValueToListOnAddButton()
+{
+    
 
 // creating and storing date object
 var currentdate = new Date();
@@ -122,8 +151,9 @@ var ul = document.getElementById("list");
 
 document.querySelector('#txt').addEventListener('keypress', function (e) { addValueToListOnEnter(e); });
 
-// printing all elements from task list when page refreshes or loads
+// printing all elements from task list and update count when page refreshes or loads
 printUlElements();
+updateCount();
 
 var closebtns = document.getElementsByClassName("close");
 for (let i = 0; i < closebtns.length; i++) 

@@ -1,21 +1,20 @@
-function TaskElement(id, taskText, show)
-{
-    this.id =  id;
+function TaskElement(id, taskText, show) {
+    this.id = id;
     this.taskText = taskText;
     this.show = show;
 }
 
-function printUlElements()
-{
+function printUlElements() {
     let list = getTasks();
     let li;
-    for (let i = 0; i < list.length; i++)
-    {
-        if (list[i].show == true)
-        {
+    for (let i = 0; i < list.length; i++) {
+        if (list[i].show == true) {
             li = document.createElement("li");
             li.id = list[i].id;
             let text = list[i].taskText;
+            li.addEventListener('click', function (e) {
+                AddorRemoveStrike(e);
+            });
             li.appendChild(document.createTextNode(text));
             let span = document.createElement("span");
             span.className = "close";
@@ -26,23 +25,20 @@ function printUlElements()
     }
 }
 
-function getTasks()
-{
-    if (localStorage.getItem("taskList"))
-    {
+
+function getTasks() {
+    if (localStorage.getItem("taskList")) {
         return JSON.parse(localStorage.getItem("taskList")) || [];
     }
     let array = [];
     setTasks(array);
 }
 
-function setTasks(array)
-{
+function setTasks(array) {
     localStorage.setItem("taskList", JSON.stringify(array));
 }
 
-function deleteTask(e)
-{
+function deleteTask(e) {
     let parent = e.currentTarget.parentElement;
     let id = parent.id;
     console.log(id);
@@ -53,10 +49,8 @@ function deleteTask(e)
     parent.style.display = "none";
 }
 
-function createId()
-{
-    if (localStorage.getItem("counter"))
-    {
+function createId() {
+    if (localStorage.getItem("counter")) {
         count = localStorage.getItem("counter");
         localStorage.setItem("counter", ++count);
         return count;
@@ -65,28 +59,33 @@ function createId()
     return 0;
 }
 
-function addValueToListOnEnter(e)
-{
+
+function AddorRemoveStrike(e) {
+    if (e.currentTarget.style.textDecoration == 'line-through') {
+        e.currentTarget.style.textDecoration = 'none';
+        return
+    }
+    e.currentTarget.style.textDecoration = 'line-through';
+}
+
+function addValueToListOnEnter(e) {
     // getting and trimming text-area value from DOM
     let textArea = document.getElementById("txt");
     let textString = textArea.value;
     let trimmedString = textString.trim();
 
-    if (e.key === 'Enter' && trimmedString != "") 
-    {
+    if (e.key === 'Enter' && trimmedString != "") {
         // fetching taskList from database
         var array = getTasks();
 
         // create new task element
         var task = new TaskElement(createId(), trimmedString, true);
 
-        if (array.length > 0)
-        {
+        if (array.length > 0) {
             array.unshift(task);
             setTasks(array);
         }
-        else
-        {
+        else {
             array = [];
             array.push(task);
             setTasks(array);
@@ -94,7 +93,11 @@ function addValueToListOnEnter(e)
 
         // create DOM element li to display, append task string to it and assigning same id as task element in databse
         let li = document.createElement("li");
+
         li.appendChild(document.createTextNode(textArea.value));
+        li.addEventListener('click', function (e) {
+            AddorRemoveStrike(e);
+        });
         li.id = task.id;
 
         // creating close button and add event listener to it
@@ -126,8 +129,7 @@ document.querySelector('#txt').addEventListener('keypress', function (e) { addVa
 printUlElements();
 
 var closebtns = document.getElementsByClassName("close");
-for (let i = 0; i < closebtns.length; i++) 
-{
-    closebtns[i].addEventListener("click", function(e) { deleteTask(e); });
+for (let i = 0; i < closebtns.length; i++) {
+    closebtns[i].addEventListener("click", function (e) { deleteTask(e); });
 }
 

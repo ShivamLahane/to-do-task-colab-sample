@@ -4,48 +4,49 @@ function TaskElement(id, taskText, show, striked)
     this.taskText = taskText;
     this.show = show;
     this.strike = striked;
-
+    this.time = new Date();
 }
 
 function printLastUpdate()
 {
-    document.getElementById("last-update-time").innerHTML = (new Date()).now();
+    document.getElementById("last-update-time").innerHTML = "Last Update : " + new Date();
 }
 
 function updateCount()
 {
     let countLabel = document.getElementById("count");
-    let count = getCount();
-    if (count)
-    {
-        countLabel.innerHTML = "Count : " + count;
-        return;
-    }
-    countLabel.innerHTML = 0;
+    countLabel.innerHTML = "Count : " + count;
 }
 
-function printUlElements()
+function printUlElements() 
 {
     let list = getTasks();
     let li;
-    for (let i = 0; i < list.length; i++)
-    {
-        if (list[i].show == true)
-        {
+    count = 0;
+    for (let i = 0; i < list.length; i++) {
+        if (list[i].show == true) {
             li = document.createElement("li");
             li.id = list[i].id;
             let text = list[i].taskText;
+            let time = document.createElement("p");
+            time.innerHTML = moment(list[i].time).fromNow();
+            li.addEventListener('click', function (e) {
+                addOrRemoveStrike(e);
+            });
             li.appendChild(document.createTextNode(text));
+            li.appendChild(time);
             let span = document.createElement("span");
             span.className = "close";
             span.innerHTML = "&times;";
             li.appendChild(span);
             ul.appendChild(li);
+            count++;
         }
     }
 }
 
-function getTasks()
+
+function getTasks() 
 {
     if (localStorage.getItem("taskList"))
     {
@@ -55,8 +56,7 @@ function getTasks()
     setTasks(array);
 }
 
-function setTasks(array)
-{
+function setTasks(array) {
     localStorage.setItem("taskList", JSON.stringify(array));
 }
 
@@ -70,17 +70,19 @@ function deleteTask(e)
     array[len - (len - id)].show = false;
     setTasks(array);
     parent.style.display = "none";
+    count--;
+    updateCount();
+    printLastUpdate();
 }
 
-function getCount()
+function deleteAll()
 {
-    return localStorage.getItem("counter");
+    
 }
 
-function createId()
+function createId() 
 {
-    if (localStorage.getItem("counter"))
-    {
+    if (localStorage.getItem("counter")) {
         count = localStorage.getItem("counter");
         localStorage.setItem("counter", ++count);
         return count;
@@ -89,59 +91,78 @@ function createId()
     return 0;
 }
 
-function addValueToListOnEnter(e)
+
+function addOrRemoveStrike(e) 
+{
+    printLastUpdate();
+    if (e.currentTarget.style.textDecoration == 'line-through') {
+        e.currentTarget.style.textDecoration = 'none';
+        return
+    }
+    e.currentTarget.style.textDecoration = 'line-through';
+}
+
+function addValueToListOnEnter(e) 
 {
     // getting and trimming text-area value from DOM
-    let textArea = document.getElementById("txt");
     let textString = textArea.value;
     let trimmedString = textString.trim();
 
-    if (e.key === 'Enter' && trimmedString != "") 
+    if (e.key === 'Enter' && trimmedString != "")
     {
-        // fetching taskList from database
-        var array = getTasks();
-
-        // create new task element
-        var task = new TaskElement(createId(), trimmedString, true, false);
-
-        if (array.length > 0)
-        {
-            array.unshift(task);
-            setTasks(array);
-        }
-        else
-        {
-            array = [];
-            array.push(task);
-            setTasks(array);
-        }
-
-        // create DOM element li to display, append task string to it and assigning same id as task element in databse
-        let li = document.createElement("li");
-        li.appendChild(document.createTextNode(textArea.value));
-        li.id = task.id;
-
-        // creating close button and add event listener to it
-        var span = document.createElement("span");
-        span.className = "close";
-        span.innerHTML = "&times;";
-        span.addEventListener("click", function (e) { deleteTask(e) });
-
-        // adding span to li element
-        li.appendChild(span);
-
-        // adding li to ul
-        ul.prepend(li);
-
-        // making text area value null again
-        textArea.value = null;
-        updateCount();
+        addToList();
     }
 }
-
-function addValueToListOnAddButton()
+function addToList()
 {
+            // fetching taskList from database
+            var array = getTasks();
+
+            // create new task element
+            var task = new TaskElement(createId(), textArea.value, true, false);
     
+            if (array.length > 0) {
+                array.unshift(task);
+                setTasks(array);
+            }
+            else {
+                array = [];
+                array.push(task);
+                setTasks(array);
+            }
+    
+            // create DOM element li to display, append task string to it and assigning same id as task element in databse
+            let li = document.createElement("li");
+    
+            li.appendChild(document.createTextNode(textArea.value));
+            li.addEventListener('click', function (e) {
+                addOrRemoveStrike(e);
+            });
+            li.id = task.id;
+    
+            // creating close button and add event listener to it
+            var span = document.createElement("span");
+            span.className = "close";
+            span.innerHTML = "&times;";
+            span.addEventListener("click", function (e) { deleteTask(e) });
+    
+            // adding span to li element
+            li.appendChild(span);
+    
+            // adding li to ul
+            ul.prepend(li);
+    
+            // making text area value null again
+            textArea.value = null;
+            count++;
+            updateCount();
+            printLastUpdate();
+}
+
+var count;
+
+// textArea var
+var textArea = document.getElementById("txt");
 
 // creating and storing date object
 var currentdate = new Date();
@@ -156,8 +177,10 @@ printUlElements();
 updateCount();
 
 var closebtns = document.getElementsByClassName("close");
+document.getElementById("add").addEventListener("click", addToList );
+document.getElementById("delete-all").addEventListener("click", deleteAll );
+
 for (let i = 0; i < closebtns.length; i++) 
 {
-    closebtns[i].addEventListener("click", function(e) { deleteTask(e); });
+    closebtns[i].addEventListener("click", function (e) { deleteTask(e); });
 }
-
